@@ -1,0 +1,213 @@
+{
+  "name": "AI-powered Competitor Analysis Demo",
+  "nodes": [
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "20"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        512,
+        160
+      ],
+      "id": "d2eabb95-e22d-44cc-b1f3-23aa19a2a83e",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.googleDocs",
+      "typeVersion": 2,
+      "position": [
+        720,
+        -112
+      ],
+      "id": "40d33657-0056-46f5-a6eb-dcd83e3a9c11",
+      "name": "Create a document",
+      "credentials": {
+        "googleDocsOAuth2Api": {
+          "id": "kp90gwlQzessDK97",
+          "name": "Google Docs account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "formTitle": "AI Knowledge Summary Generator",
+        "formDescription": "Generate a structured AI summary for any keyword",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Keyword",
+              "placeholder": "Cloud Computing",
+              "requiredField": true
+            }
+          ]
+        },
+        "responseMode": "lastNode",
+        "options": {
+          "buttonLabel": "Generate Summary"
+        }
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.5,
+      "position": [
+        -48,
+        -112
+      ],
+      "id": "e9b040df-9c95-40c2-93fb-8f99b9602255",
+      "name": "Input keyword",
+      "webhookId": "d2eeba3a-1a60-4ccd-b9c3-c93755a981fc"
+    },
+    {
+      "parameters": {
+        "jsCode": "const keyword = $json.keyword;\n\nif (!$input.first().json.Keyword) {\n  throw new Error(\"Keyword is required\");\n}\n\nreturn [{\n  keyword: $input.first().json.Keyword.trim()\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        160,
+        -112
+      ],
+      "id": "af5f06e7-c2e6-4bac-9a39-c8d7d23d0b14",
+      "name": "Clean & normalize input"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Create a structured summary for the keyword:\n\n\"{{ $json.keyword }}\"\n\nUse the following structure:\n\nTitle\nOverview\nKey Concepts (bullet points)\nUse Cases (bullet points)\nBenefits (bullet points)\nConclusion\n\nDo not use markdown.\n",
+        "options": {
+          "systemMessage": "You are an expert technical writer.\nGenerate clear, structured, professional summaries.\nUse memory only to improve consistency.\nDo not mention memory or prior context.\nReturn plain text only.\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        368,
+        -112
+      ],
+      "id": "10428029-00a7-4ca6-8388-53d92854bc90",
+      "name": "Use OpenAI + memory to create summary"
+    },
+    {
+      "parameters": {
+        "formFields": {
+          "values": [
+            {}
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.form",
+      "typeVersion": 2.5,
+      "position": [
+        928,
+        -112
+      ],
+      "id": "e8a31003-2229-415d-a134-69917bab4a3c",
+      "name": "(Form Response): Show success message",
+      "webhookId": "802a655a-0698-4f6a-b7ca-f982e0c38b89"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        240,
+        96
+      ],
+      "id": "8a18c941-6bee-4255-978d-fb98ac3385cf",
+      "name": "OpenAI Chat Model"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Use OpenAI + memory to create summary",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a document": {
+      "main": [
+        [
+          {
+            "node": "(Form Response): Show success message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Input keyword": {
+      "main": [
+        [
+          {
+            "node": "Clean & normalize input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Clean & normalize input": {
+      "main": [
+        [
+          {
+            "node": "Use OpenAI + memory to create summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Use OpenAI + memory to create summary": {
+      "main": [
+        [
+          {
+            "node": "Create a document",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Use OpenAI + memory to create summary",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "b7012578-e9b0-459d-bf73-171221e194ba",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "29140fae945cf9b77d350f2d80e5380bb5546aca6967b18d2238cc44773ee5ab"
+  },
+  "id": "0qDtehWw4MoNOBmYBhU4z",
+  "tags": []
+}
