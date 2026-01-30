@@ -1,0 +1,326 @@
+{
+  "name": "fathon transcript task",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -496,
+        -448
+      ],
+      "id": "67b9cb6b-a1a4-440e-8bb0-18d4acf8567e",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. Receive the input JSON coming from the Manual Trigger\nconst input = $input.item.json;\n\n// 2. Copy the transcript text\nlet transcript = input.transcript;\n\n// 3. Remove all timestamps like [00:01] or [01:23:45]\ntranscript = transcript.replace(/\\[\\d{2}:\\d{2}(:\\d{2})?\\]/g, '').trim();\n\n// 4. Return both the original and cleaned versions for comparison\nreturn [{\n  json: {\n    meeting_title: input.meeting_title,\n    meeting_date: input.meeting_date,\n    original_transcript: input.transcript,\n    cleaned_transcript: transcript\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -192,
+        -176
+      ],
+      "id": "90dec00f-d9c9-40c1-aeb5-11c013198985",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are an assistant that reads meeting transcripts and extracts every clearly assigned or implied action item. \nPlease list each action item as a short sentence including:\n- What needs to be done\n- Who is responsible (if stated)\n- Any due date mentioned\n\nReturn the results as a JSON array in this format:\n[\n  {\"action_item\": \"<what to do>\", \"owner\": \"<person>\", \"due_date\": \"<date or null>\"}\n]\nUse concise language.",
+        "messages": {
+          "messageValues": [
+            {
+              "type": "AIMessagePromptTemplate",
+              "message": "={{ $json.cleaned_transcript }}"
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        64,
+        -224
+      ],
+      "id": "8fbb4167-c54a-4bee-a495-52b2179b0505",
+      "name": "Basic LLM Chain"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        80,
+        112
+      ],
+      "id": "03de21ec-cc94-4a19-a264-672a866eaadf",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "XCQVbtEXQxEHY3vE",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get the text output from the OpenAI node\nconst text = $json[\"text\"];\n\n// Remove any triple backticks and \"json\" labels\nlet cleaned = text.replace(/```json|```/g, '').trim();\n\n// Parse the cleaned string into real JSON\nlet actionItems = [];\ntry {\n  actionItems = JSON.parse(cleaned);\n} catch (error) {\n  throw new Error('Failed to parse action items JSON: ' + error.message);\n}\n\n// Return one item per action for next batching step\nreturn actionItems.map(item => ({ json: item }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        432,
+        -272
+      ],
+      "id": "b12416de-38da-489f-b7db-373be84771c4",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        688,
+        -128
+      ],
+      "id": "9e1fc0cc-09dd-4c2f-9e5f-1ccd6c3ccfd6",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "name": "Replace Me",
+      "typeVersion": 1,
+      "position": [
+        960,
+        -64
+      ],
+      "id": "b4ec155a-d2c4-4181-ad44-0dcce6b845f0"
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "base": {
+          "__rl": true,
+          "value": "appaFlT3hMIWxeTnm",
+          "mode": "id"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblx3nnItnFiax6kN",
+          "mode": "id"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Action Items": "={{ $json.action_item }}",
+            "Owner": "={{ $json.owner }}",
+            "Due Date": "={{ $json.due_date }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Action Items",
+              "displayName": "Action Items",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Owner",
+              "displayName": "Owner",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Due Date",
+              "displayName": "Due Date",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {
+          "typecast": true
+        }
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        1168,
+        -304
+      ],
+      "id": "aff09ef7-b7b5-4cf0-8210-e40411feaeaa",
+      "name": "Create a record",
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "U9zgdEDZQVXDKVy3",
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Simple relative-date approximator\nfunction toISO(dueStr) {\n  const now = new Date();\n\n  // Lowercase comparison\n  const s = (dueStr || '').toLowerCase();\n\n  if (!s || s === 'null') return null;\n\n  if (s.includes('today')) return now.toISOString();\n  if (s.includes('tomorrow')) return new Date(now.setDate(now.getDate() + 1)).toISOString();\n  if (s.includes('next monday')) return nextWeekdayISO(1);\n  if (s.includes('next tuesday')) return nextWeekdayISO(2);\n  if (s.includes('next wednesday')) return nextWeekdayISO(3);\n  if (s.includes('next thursday')) return nextWeekdayISO(4);\n  if (s.includes('next friday')) return nextWeekdayISO(5);\n  if (s.includes('next saturday')) return nextWeekdayISO(6);\n  if (s.includes('next sunday')) return nextWeekdayISO(0);\n  return null; // fallback\n}\n\n// helper to compute next weekday ISO\nfunction nextWeekdayISO(dayIndex) {\n  const date = new Date();\n  const diff = (dayIndex + 7 - date.getDay()) % 7 || 7;\n  date.setDate(date.getDate() + diff);\n  return date.toISOString();\n}\n\n// transform all items\nreturn items.map(item => {\n  const t = item.json;\n  return { json: {\n    action_item: t.action_item,\n    owner: t.owner,\n    due_date: toISO(t.due_date) || null\n  }};\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        928,
+        -288
+      ],
+      "id": "3f6ef765-3b8e-4087-9218-cc0d2e054698",
+      "name": "Code in JavaScript2"
+    }
+  ],
+  "pinData": {
+    "When clicking ‘Execute workflow’": [
+      {
+        "json": {
+          "meeting_title": "Q3 Marketing Strategy Planning",
+          "meeting_date": "2025-04-10",
+          "transcript": "[00:00] Morning everyone, welcome to our Q3 marketing strategy session. [00:12] I'm Sarah from product management. Let's go over key goals first. [00:27] Emily, can you outline the campaign schedule for Q3? [00:45] Sure, we plan to start the awareness campaign in early May. [01:05] John, we’ll need development support to build the new email landing page by next Thursday. [01:25] Got it, I'll add that to our sprint. [01:38] Mike, please run compatibility tests on the embedded video ads. [01:52] Will do, I’ll finish by Friday this week. [02:07] The content team must finalize the draft blog series by April 18th. [02:24] Emily, coordinate the SEO review with the external agency. [02:39] Sarah, update the launch checklist on Confluence by tomorrow. [02:55] Finance needs projected ad spend numbers by April 15th. [03:10] John, can you deliver the analytics tracking script updates by next Wednesday? [03:28] Emily, schedule design reviews for the new creative assets. [03:42] Mike, verify that campaign tracking pixels are firing correctly. [03:59] We should prepare training materials for the sales team before campaign kickoff. [04:16] Sarah, draft the internal announcement email for all departments. [04:33] Emily, draft the press release by April 20th. [04:50] John, ensure the website staging server has updated environment variables. [05:06] QA team will complete end‑to‑end campaign link validation by April 17th. [05:22] Finance will confirm budget approvals by next Monday. [05:38] Marketing analytics dashboard refresh should be done by April 25th. [05:55] Emily, organize influencer outreach list by April 22nd. [06:10] Mike, set up automated reporting in Data Studio before launch. [06:27] Sarah, schedule the post‑campaign results meeting for May 5th. [06:42] John, back up all campaign assets to cloud storage after launch. [06:57] Great teamwork everyone, let's make Q3 campaigns more data‑driven!"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Replace Me",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Replace Me": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript2": {
+      "main": [
+        [
+          {
+            "node": "Create a record",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "00a72f39-0e18-4d2a-bcaf-1b5f3d92c574",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "29140fae945cf9b77d350f2d80e5380bb5546aca6967b18d2238cc44773ee5ab"
+  },
+  "id": "oXeUyp1Cq01G_5PTBv8oA",
+  "tags": []
+}

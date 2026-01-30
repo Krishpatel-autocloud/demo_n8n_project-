@@ -1,0 +1,102 @@
+{
+  "name": "Slack setup",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -368,
+        -240
+      ],
+      "id": "0601ae93-3e82-4ec0-9b43-08cbdbe17c93",
+      "name": "When clicking ‘Execute workflow’",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "C0ABCNR7SBF",
+          "mode": "list",
+          "cachedResultName": "hello"
+        },
+        "text": "hi",
+        "otherOptions": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.4,
+      "position": [
+        -112,
+        -224
+      ],
+      "id": "1e2af794-7a4d-4c91-b0c3-04ade57f3a4c",
+      "name": "Send a message",
+      "webhookId": "6679cafc-3859-4a08-80e4-a196f26333c4",
+      "credentials": {
+        "slackApi": {
+          "id": "9hDIzv6Mvi46XULb",
+          "name": "Slack account"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "trigger": [
+          "any_event",
+          "app_mention"
+        ],
+        "channelId": {
+          "__rl": true,
+          "value": "C0ABCNR7SBF",
+          "mode": "list",
+          "cachedResultName": "hello"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.slackTrigger",
+      "typeVersion": 1,
+      "position": [
+        -288,
+        80
+      ],
+      "id": "4e48dd6a-412d-4de2-ae6b-21205a1de3fb",
+      "name": "Slack Trigger",
+      "webhookId": "0cab6c16-4e5e-4b44-93f1-5bfd08ac98e3",
+      "credentials": {
+        "slackApi": {
+          "id": "9hDIzv6Mvi46XULb",
+          "name": "Slack account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "320d5771-8902-4bff-8029-d439e1a6c053",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "29140fae945cf9b77d350f2d80e5380bb5546aca6967b18d2238cc44773ee5ab"
+  },
+  "id": "C2D0-k_2wMODGBC7v8UfK",
+  "tags": []
+}

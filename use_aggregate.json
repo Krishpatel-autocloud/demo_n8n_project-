@@ -1,0 +1,231 @@
+{
+  "name": "use_aggregate",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -352,
+        -112
+      ],
+      "id": "d39acd6d-13de-45ee-9b23-487e92990fc3",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "fieldsToAggregate": {
+          "fieldToAggregate": [
+            {
+              "fieldToAggregate": "name"
+            },
+            {
+              "fieldToAggregate": "qty"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        176,
+        -128
+      ],
+      "id": "5d6b4cd2-ca98-4a1c-a21a-0eaef65bfdab",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "fromEmail": "krish.patel@e2m.solutions",
+        "toEmail": "krishnapriya.nair@e2m.solutions",
+        "subject": "email formating ",
+        "html": "={{ $json.name }}\n{{ $json.qty }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        848,
+        0
+      ],
+      "id": "9f522862-6f65-4915-9476-9a6abafa3356",
+      "name": "Send email",
+      "webhookId": "2d4a7e3c-21c5-4a73-adeb-cf5f5095ef49",
+      "credentials": {
+        "smtp": {
+          "id": "5YUZPYlAMvFJeSvq",
+          "name": "SMTP account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "C0ABCNR7SBF",
+          "mode": "list",
+          "cachedResultName": "hello"
+        },
+        "text": "={{ $json.emailBody }}",
+        "otherOptions": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.4,
+      "position": [
+        832,
+        -288
+      ],
+      "id": "d0ba222d-bff8-470a-a038-3232576ba28f",
+      "name": "Send a message",
+      "webhookId": "aac99867-7e01-46d7-9392-0af9bef8872f",
+      "credentials": {
+        "slackApi": {
+          "id": "9hDIzv6Mvi46XULb",
+          "name": "Slack account"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f6bb4e8f-cb57-4463-9a35-2b44022faa0b",
+              "name": "name",
+              "value": "={{ $json.name }}",
+              "type": "string"
+            },
+            {
+              "id": "6c8007dd-0966-48e7-93a7-7e385f43fc22",
+              "name": "qty",
+              "value": "={{ $json.qty }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -160,
+        -192
+      ],
+      "id": "6369e4ea-e895-414a-bd45-d589b0dc412a",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst data = items[0].json;\n\nlet emailBody = \"Here are all the items:\\n\\n\";\n\n// Loop through the arrays\nfor (let i = 0; i < data.name.length; i++) {\n  emailBody += (i + 1) + \". \" + data.name[i] + \" - Quantity: \" + data.qty[i] + \"\\n\";\n}\n\nreturn [{ json: { emailBody: emailBody } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        432,
+        -144
+      ],
+      "id": "fb5b583d-699b-493c-9018-58b17cb78390",
+      "name": "Code in JavaScript"
+    }
+  ],
+  "pinData": {
+    "When clicking ‘Execute workflow’": [
+      {
+        "json": {
+          "name": "Item A",
+          "qty": 2
+        }
+      },
+      {
+        "json": {
+          "name": "Item B",
+          "qty": 5
+        }
+      },
+      {
+        "json": {
+          "name": "Item C",
+          "qty": 1
+        }
+      },
+      {
+        "json": {
+          "name": "Item D",
+          "qty": 4
+        }
+      },
+      {
+        "json": {
+          "name": "Item E",
+          "qty": 3
+        }
+      }
+    ]
+  },
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "d78d6ea1-ebcd-4c64-84d4-bbe93bfa0e28",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "29140fae945cf9b77d350f2d80e5380bb5546aca6967b18d2238cc44773ee5ab"
+  },
+  "id": "popzNktbdpDJnYiuwTeYE",
+  "tags": []
+}

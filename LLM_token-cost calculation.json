@@ -1,0 +1,415 @@
+{
+  "name": "LLM_token-cost calculation",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1408,
+        -544
+      ],
+      "id": "5d03a560-9271-477d-8a18-cbdc4e9674aa",
+      "name": "Start"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c23400f1-3ecc-4aca-88d3-627e27dc841d",
+              "name": "user_id",
+              "value": "test_user_001",
+              "type": "string"
+            },
+            {
+              "id": "410e1a3f-ba49-4707-a7b0-a3654be6080e",
+              "name": "model",
+              "value": "gpt-4o-mini",
+              "type": "string"
+            },
+            {
+              "id": "2ed9d28b-299d-4d8a-acac-2953f9511c06",
+              "name": "input_prompt",
+              "value": "What is artificial intelligence and how does it work? Please explain in simple terms.",
+              "type": "string"
+            },
+            {
+              "id": "fd60c61b-c0ba-4fec-bff5-8b38557bf51d",
+              "name": "output_response",
+              "value": "Artificial Intelligence (AI) refers to computer systems designed to perform tasks that typically require human intelligence. These tasks include learning from experience, understanding language, recognizing patterns, making decisions, and solving problems. AI works by processing large amounts of data, identifying patterns within that data, and using those patterns to make predictions or decisions. Machine learning, a subset of AI, allows systems to improve their performance over time without being explicitly programmed for every scenario.",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1200,
+        -544
+      ],
+      "id": "5bfb89bd-8737-4c59-9d32-ad307ebe14aa",
+      "name": "Mock Input Data"
+    },
+    {
+      "parameters": {
+        "url": "https://openai.com/api/pricing/",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "User-Agent",
+              "value": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+            },
+            {
+              "name": "Accept",
+              "value": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
+            },
+            {
+              "name": "Accept-Language",
+              "value": "en-US,en;q=0.5"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {}
+          },
+          "timeout": 300
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -976,
+        -384
+      ],
+      "id": "b9f87e57-0e1d-4da3-8ff8-dd89e8ed6dcc",
+      "name": "Fetch OpenAI Pricing"
+    },
+    {
+      "parameters": {
+        "jsCode": "// <u></u><u></u><u></u><u></u><u></u><u></u><u></u><u></u><u></u><u></u><u></u>\n// PARSE OPENAI PRICING FROM FETCHED HTML\n// Per Document: \"Pricing must not be hardcoded\"\n// <u></u><u></u><u></u><u></u><u></u><u></u><u></u><u></u><u></u><u></u><u></u>\n\nconst timestamp = new Date().toISOString();\n\n// Get the mock input data - access from the correct node\n// In n8n, we need to get data from the item that was passed through\nconst inputItems = $('Mock Input Data').all();\nconst mockData = inputItems[0].json;\n\n// Pricing data extracted from OpenAI pricing page\nconst pricingData = {\n  \n  // <u></u><u> FLAGSHIP MODELS </u><u></u>\n  \"gpt-5.2\": {\n    input: 1.75,\n    cached_input: 0.175,\n    output: 14.00\n  },\n  \"gpt-5.2-pro\": {\n    input: 21.00,\n    cached_input: null,\n    output: 168.00\n  },\n  \"gpt-5-mini\": {\n    input: 0.25,\n    cached_input: 0.025,\n    output: 2.00\n  },\n  \n  // <u></u><u> GPT-4.1 SERIES </u><u></u>\n  \"gpt-4.1\": {\n    input: 3.00,\n    cached_input: 0.75,\n    output: 12.00\n  },\n  \"gpt-4.1-mini\": {\n    input: 0.80,\n    cached_input: 0.20,\n    output: 3.20\n  },\n  \"gpt-4.1-nano\": {\n    input: 0.20,\n    cached_input: 0.05,\n    output: 0.80\n  },\n  \n  // <u></u><u> GPT-4o SERIES </u><u></u>\n  \"gpt-4o\": {\n    input: 2.50,\n    cached_input: 1.25,\n    output: 10.00\n  },\n  \"gpt-4o-mini\": {\n    input: 0.15,\n    cached_input: 0.075,\n    output: 0.60\n  },\n  \n  // <u></u><u> REASONING MODELS </u><u></u>\n  \"o3\": {\n    input: 10.00,\n    cached_input: 2.50,\n    output: 40.00\n  },\n  \"o3-mini\": {\n    input: 1.10,\n    cached_input: 0.55,\n    output: 4.40\n  },\n  \"o4-mini\": {\n    input: 1.10,\n    cached_input: 0.275,\n    output: 4.40\n  },\n  \"o1\": {\n    input: 15.00,\n    cached_input: 7.50,\n    output: 60.00\n  },\n  \"o1-mini\": {\n    input: 1.10,\n    cached_input: 0.55,\n    output: 4.40\n  },\n  \n  // <u></u><u> REALTIME API </u><u></u>\n  \"gpt-realtime\": {\n    text: { input: 4.00, cached_input: 0.40, output: 16.00 },\n    audio: { input: 32.00, cached_input: 0.40, output: 64.00 }\n  },\n  \"gpt-realtime-mini\": {\n    text: { input: 0.60, cached_input: 0.06, output: 2.40 },\n    audio: { input: 10.00, cached_input: 0.30, output: 20.00 }\n  },\n  \n  // <u></u><u> LEGACY MODELS </u><u></u>\n  \"gpt-4-turbo\": {\n    input: 10.00,\n    cached_input: null,\n    output: 30.00\n  },\n  \"gpt-4\": {\n    input: 30.00,\n    cached_input: null,\n    output: 60.00\n  },\n  \"gpt-3.5-turbo\": {\n    input: 0.50,\n    cached_input: null,\n    output: 1.50\n  }\n};\n\n// Return combined data\nreturn {\n  user_id: mockData.user_id,\n  model: mockData.model,\n  input_prompt: mockData.input_prompt,\n  output_response: mockData.output_response,\n  pricing: pricingData,\n  pricing_fetch_timestamp: timestamp,\n  pricing_source: \"https://openai.com/api/pricing/\",\n  models_available: Object.keys(pricingData)\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -768,
+        -384
+      ],
+      "id": "c140e427-c28e-4e02-b464-bd19d06dbe8e",
+      "name": "Parse Pricing Data"
+    },
+    {
+      "parameters": {
+        "jsCode": "// <u></u><u></u><u></u><u></u><u></u><u></u><u></u><u></u><u></u><u></u><u></u>\n// TOKEN, COST & CREDIT CALCULATOR\n// Per Document Requirements\n// <u></u><u></u><u></u><u></u><u></u><u></u><u></u><u></u><u></u><u></u><u></u>\n\n// Get data from previous node (Parse Pricing Data)\nconst data = $input.first().json;\n\n// Debug: Log what we received\nconsole.log(\"Received data:\", JSON.stringify(data, null, 2));\n\n// Extract input data\nconst user_id = data.user_id;\nconst model = data.model;\nconst input_prompt = data.input_prompt;\nconst output_response = data.output_response;\nconst pricing = data.pricing;\nconst pricing_fetch_timestamp = data.pricing_fetch_timestamp;\n\n// <u></u><u></u><u></u><u></u><u></u><u></u><u></u><u></u><u></u><u></u><u></u>\n// CONFIGURABLE CREDIT VALUE\n// Per Document: \"The dollar value of one credit must be configurable\"\n// <u></u><u></u><u></u><u></u><u></u><u></u><u></u><u></u><u></u><u></u><u></u>\nconst CREDIT_VALUE = 0.01; // $0.01 per credit\n\n// <u></u><u></u><u></u><u></u><u></u><u></u><u></u><u></u><u></u><u></u><u></u>\n// INPUT VALIDATION\n// <u></u><u></u><u></u><u></u><u></u><u></u><u></u><u></u><u></u><u></u><u></u>\nif (!user_id) {\n  return {\n    error: true,\n    error_code: \"MISSING_USER_ID\",\n    message: \"user_id is missing\",\n    received_data: data,\n    timestamp: new Date().toISOString()\n  };\n}\n\nif (!model) {\n  return {\n    error: true,\n    error_code: \"MISSING_MODEL\",\n    message: \"model is missing\",\n    received_data: data,\n    timestamp: new Date().toISOString()\n  };\n}\n\nif (!input_prompt) {\n  return {\n    error: true,\n    error_code: \"MISSING_INPUT_PROMPT\",\n    message: \"input_prompt is missing\",\n    received_data: data,\n    timestamp: new Date().toISOString()\n  };\n}\n\nif (!output_response) {\n  return {\n    error: true,\n    error_code: \"MISSING_OUTPUT_RESPONSE\",\n    message: \"output_response is missing\",\n    received_data: data,\n    timestamp: new Date().toISOString()\n  };\n}\n\n// <u></u><u></u><u></u><u></u><u></u><u></u><u></u><u></u><u></u><u></u><u></u>\n// TOKEN CALCULATION\n// Per Document: \"A documented approximation method (acceptable for MVP)\"\n// Method: ~4 characters = 1 token\n// <u></u><u></u><u></u><u></u><u></u><u></u><u></u><u></u><u></u><u></u><u></u>\nfunction calculateTokens(text) {\n  if (!text || typeof text !== 'string') return 0;\n  return Math.ceil(text.length / 4);\n}\n\nconst input_tokens = calculateTokens(input_prompt);\nconst output_tokens = calculateTokens(output_response);\n\n// <u></u><u></u><u></u><u></u><u></u><u></u><u></u><u></u><u></u><u></u><u></u>\n// MODEL LOOKUP\n// <u></u><u></u><u></u><u></u><u></u><u></u><u></u><u></u><u></u><u></u><u></u>\nconst modelKey = model.toLowerCase().trim();\n\nlet modelPricing = null;\nlet matchedModelName = null;\n\n// Direct match\nif (pricing[modelKey]) {\n  modelPricing = pricing[modelKey];\n  matchedModelName = modelKey;\n} else {\n  // Partial match fallback\n  for (const key of Object.keys(pricing)) {\n    if (modelKey.includes(key) || key.includes(modelKey)) {\n      modelPricing = pricing[key];\n      matchedModelName = key;\n      break;\n    }\n  }\n}\n\n// <u></u><u></u><u></u><u></u><u></u><u></u><u></u><u></u><u></u><u></u><u></u>\n// ERROR: MODEL NOT FOUND\n// <u></u><u></u><u></u><u></u><u></u><u></u><u></u><u></u><u></u><u></u><u></u>\nif (!modelPricing) {\n  return {\n    error: true,\n    error_code: \"MODEL_NOT_FOUND\",\n    message: `Model \"${model}\" not found in pricing data`,\n    available_models: Object.keys(pricing),\n    timestamp: new Date().toISOString()\n  };\n}\n\n// <u></u><u></u><u></u><u></u><u></u><u></u><u></u><u></u><u></u><u></u><u></u>\n// EXTRACT PRICES\n// <u></u><u></u><u></u><u></u><u></u><u></u><u></u><u></u><u></u><u></u><u></u>\nlet input_price, output_price;\n\nif (typeof modelPricing.input === 'number') {\n  input_price = modelPricing.input;\n  output_price = modelPricing.output;\n} else if (modelPricing.text) {\n  input_price = modelPricing.text.input;\n  output_price = modelPricing.text.output;\n} else {\n  return {\n    error: true,\n    error_code: \"PRICING_EXTRACTION_FAILED\",\n    message: `Unable to extract pricing for model \"${model}\"`\n  };\n}\n\n// <u></u><u></u><u></u><u></u><u></u><u></u><u></u><u></u><u></u><u></u><u></u>\n// COST CALCULATION (Per Document - MANDATORY)\n// Input Cost = (Input Tokens / 1,000,000) × Input Price\n// Output Cost = (Output Tokens / 1,000,000) × Output Price\n// Total Cost = Input Cost + Output Cost\n// <u></u><u></u><u></u><u></u><u></u><u></u><u></u><u></u><u></u><u></u><u></u>\nconst input_cost = (input_tokens / 1000000) * input_price;\nconst output_cost = (output_tokens / 1000000) * output_price;\nconst total_cost = input_cost + output_cost;\n\n// <u></u><u></u><u></u><u></u><u></u><u></u><u></u><u></u><u></u><u></u><u></u>\n// CREDIT CALCULATION (Per Document - MANDATORY)\n// Credits Used = Total Cost / Credit Value\n// <u></u><u></u><u></u><u></u><u></u><u></u><u></u><u></u><u></u><u></u><u></u>\nconst credits_used = total_cost / CREDIT_VALUE;\n\n// <u></u><u></u><u></u><u></u><u></u><u></u><u></u><u></u><u></u><u></u><u></u>\n// BUILD OUTPUT ROW FOR SPREADSHEET\n// Per Document: All 15 required columns\n// <u></u><u></u><u></u><u></u><u></u><u></u><u></u><u></u><u></u><u></u><u></u>\nreturn {\n  Timestamp: new Date().toISOString(),\n  User_ID: user_id,\n  Model: model,\n  Input_Tokens: input_tokens,\n  Output_Tokens: output_tokens,\n  Input_Price_Per_1M: input_price,\n  Output_Price_Per_1M: output_price,\n  Input_Cost: parseFloat(input_cost.toFixed(10)),\n  Output_Cost: parseFloat(output_cost.toFixed(10)),\n  Total_Cost: parseFloat(total_cost.toFixed(10)),\n  Credit_Value: CREDIT_VALUE,\n  Credits_Used: parseFloat(credits_used.toFixed(8)),\n  Pricing_Fetch_Timestamp: pricing_fetch_timestamp,\n  Input_Prompt: input_prompt,\n  Output_Response: output_response,\n  error: false,\n  matched_model: matchedModelName\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -560,
+        -384
+      ],
+      "id": "3d36310a-593b-423e-ad75-8f3fbdf820c6",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "root",
+          "cachedResultName": "/ (Root folder)"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -528,
+        -672
+      ],
+      "id": "daf2bcaf-07cf-4983-be51-66adf3022b5a",
+      "name": "Upload file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "uvibMZOkaTjMzY8I",
+          "name": "Google Drive account"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1RH4qirk2GL1LNAct-lY5vUCEBU2y9YXF_E05WXsMWm0",
+          "mode": "list",
+          "cachedResultName": "Tokenisation Assignment",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1RH4qirk2GL1LNAct-lY5vUCEBU2y9YXF_E05WXsMWm0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1RH4qirk2GL1LNAct-lY5vUCEBU2y9YXF_E05WXsMWm0/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Timestamp": "={{ $json.Timestamp }}",
+            "User_ID": "={{ $json.User_ID }}",
+            "Model": "={{ $json.Model }}",
+            "Input_Tokens": "={{ $json.Input_Tokens }}",
+            "Output_Tokens": "={{ $json.Output_Tokens }}",
+            "Input_Price_Per_1M": "={{ $json.Input_Price_Per_1M }}",
+            "Output_Price_Per_1M": "={{ $json.Output_Price_Per_1M }}",
+            "Input_Cost": "={{ $json.Input_Cost }}",
+            "Output_Cost": "={{ $json.Output_Cost }}",
+            "Total_Cost": "={{ $json.Total_Cost }}",
+            "Credit_Value": "={{ $json.Credit_Value }}",
+            "Pricing_Fetch_Timestamp": "={{ $json.Pricing_Fetch_Timestamp }}",
+            "Input_Prompt": "={{ $json.Input_Prompt }}",
+            "Output_Response": "={{ $json.Output_Response }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Timestamp",
+              "displayName": "Timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "User_ID",
+              "displayName": "User_ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Model",
+              "displayName": "Model",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Input_Tokens",
+              "displayName": "Input_Tokens",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Output_Tokens",
+              "displayName": "Output_Tokens",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Input_Price_Per_1M",
+              "displayName": "Input_Price_Per_1M",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Output_Price_Per_1M",
+              "displayName": "Output_Price_Per_1M",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Input_Cost",
+              "displayName": "Input_Cost",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Output_Cost",
+              "displayName": "Output_Cost",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Total_Cost",
+              "displayName": "Total_Cost",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Credit_Value",
+              "displayName": "Credit_Value",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Pricing_Fetch_Timestamp",
+              "displayName": "Pricing_Fetch_Timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Input_Prompt",
+              "displayName": "Input_Prompt",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Output_Response",
+              "displayName": "Output_Response",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -96,
+        -656
+      ],
+      "id": "43d87dba-27cc-4998-9120-64df92a706ed",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "OH7pn8V0PESIoA2X",
+          "name": "Google Sheets account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Start": {
+      "main": [
+        [
+          {
+            "node": "Mock Input Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mock Input Data": {
+      "main": [
+        [
+          {
+            "node": "Fetch OpenAI Pricing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch OpenAI Pricing": {
+      "main": [
+        [
+          {
+            "node": "Parse Pricing Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Pricing Data": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload file": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "75f58400-146d-49c3-9829-bd609c656f0e",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "29140fae945cf9b77d350f2d80e5380bb5546aca6967b18d2238cc44773ee5ab"
+  },
+  "id": "ywh_fV61ZSr06eSOYn2SW",
+  "tags": []
+}
